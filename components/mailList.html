@@ -1,0 +1,97 @@
+<link rel="import" href="./mailElement.html">
+<link rel="import" href="./infiniteList.html">
+
+<template id="mail-list-template">
+  <infinite-list></infinite-list>
+</template>
+
+<script>
+(function() {
+  require('@webcomponents/custom-elements/custom-elements.min.js')
+  const MailElement = window.customElements.get('mail-element');
+  const localDocument = document.currentScript.ownerDocument;
+
+  window.customElements.define("mail-list", class extends HTMLElement {
+
+     constructor() {
+        super(); // construct the original item to be extended, here it is the HTMLElement
+
+        this.addMails = this.addMails.bind(this)
+
+        this._mails = [];
+        this._onStep = () => {}
+        this._onSelectedChanged = () => {}
+        this.infiniteList = null
+     }
+
+     connectedCallback() {
+  			this.attachShadow({ mode: 'open' })
+  			const layoutTemplate = localDocument.querySelector('#mail-list-template').content.cloneNode(true)
+  			this.shadowRoot.appendChild(layoutTemplate)
+
+        this.infiniteList = this.shadowRoot.querySelector('infinite-list')
+     }
+
+     disconnectedCallback() {
+        // FIXME: Not implemented
+     }
+
+     attributeChangedCallback() {
+       	// FIXME: Not implemented
+     }
+
+     get mails() {
+       return this._mails
+     }
+
+     set mails(mails) {
+       this._mails = mails
+
+       const shadowRoot = this.shadowRoot
+       const infiniteList = this.infiniteList
+
+       infiniteList.innerHTML = ''
+
+       this.appendMails(infiniteList, mails)
+     }
+
+     set onStep(callback) {
+       this._onStep = callback
+       this.infiniteList.onStep = callback
+     }
+
+     set onSelectedChanged(callback) {
+       this._onSelectedChanged = callback
+     }
+
+     addMails(mails) {
+       mails.forEach(mail => console.log(mail))
+       this._mails = [...this._mails, ...mails]
+
+       const shadowRoot = this.shadowRoot
+       const infiniteList = this.infiniteList
+
+       this.appendMails(infiniteList, mails)
+     }
+
+     appendMails(list, mails) {
+       mails.forEach((mail, index) => {
+         const mailElement = new MailElement();
+         list.appendChild(mailElement)
+
+         window.customElements.whenDefined(mailElement.localName).then(() => {
+           mailElement.onClick = (mailElement) => {
+             this._onSelectedChanged(this._mails.filter(mail => mail.uid === mailElement.uid).shift())
+           }
+           mailElement.uid = mail.uid
+           mailElement.subject = mail.subject
+           mailElement.from = mail.from
+           mailElement.flags = mail.flags
+           mailElement.text = (mail.html || mail.text).replace(/(<([^>]+)>)/ig, "")
+         })
+       })
+     }
+
+  });
+})();
+</script>

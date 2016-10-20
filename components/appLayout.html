@@ -1,0 +1,50 @@
+<template id="app-layout-template">
+	<style>
+		@import "../assets/css/photon-0.1.2-dist/css/photon.min.css";
+
+		.pane-sm {
+			width: 30%;
+			max-width: 30%;
+		}
+	</style>
+	<div class="window">
+		<div class="window-content">
+			<div class="pane-group">
+				<div class="pane-sm sidebar">
+					<slot id="sidebar-slot" name="sidebar"></slot>
+				</div>
+				<div class="pane">
+					<slot id="content-slot"></slot>
+				</div>
+			</div>
+		</div>
+	</div>
+</template>
+
+<script>
+(function() {
+	require('@webcomponents/custom-elements/custom-elements.min.js')
+
+	const localDocument = document.currentScript.ownerDocument;
+
+	window.customElements.define("app-layout", class extends HTMLElement {
+	   constructor() {
+	      super(); // construct the original item to be extended, here it is the HTMLElement
+	   }
+
+	   connectedCallback(){
+				this.attachShadow({ mode: 'open' })
+				const layoutTemplate = localDocument.querySelector('#app-layout-template').content.cloneNode(true)
+				this.shadowRoot.appendChild(layoutTemplate)
+	   }
+
+	   disconnectedCallback(){
+	      // FIXME: Not implemented
+	   }
+
+	   attributeChangedCallback() {
+	     	// FIXME: Not implemented
+	   }
+	});
+})();
+</script>

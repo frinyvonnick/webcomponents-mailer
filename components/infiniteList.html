@@ -1,0 +1,70 @@
+<template id="infinite-list-template">
+  <style>
+    @import "../assets/css/photon-0.1.2-dist/css/photon.min.css";
+    ul {
+      max-height: 100vh;
+      overflow-y: auto;
+      overflow-x: hidden;
+    }
+  </style>
+  <ul class="list-group">
+  </ul>
+</template>
+
+<script>
+(function() {
+  require('@webcomponents/custom-elements/custom-elements.min.js')
+  const localDocument = document.currentScript.ownerDocument;
+
+  window.customElements.define("infinite-list", class extends HTMLElement {
+     constructor() {
+        super(); // construct the original item to be extended, here it is the HTMLElement
+
+        this.onScroll = this.onScroll.bind(this)
+        this.appendChild = this.appendChild.bind(this)
+
+        this._step = 5
+        this._onStep = () => {}
+        this._scrollHeight = 0
+        this._isFetching = false
+     }
+
+     connectedCallback(){
+       this.attachShadow({ mode: 'open' })
+       const layoutTemplate = localDocument.querySelector('#infinite-list-template').content.cloneNode(true)
+       this.shadowRoot.appendChild(layoutTemplate)
+
+       this.shadowRoot.querySelector('ul').addEventListener('scroll', this.onScroll)
+     }
+
+     disconnectedCallback(){
+        // FIXME: Not implemented
+     }
+
+     attributeChangedCallback() {
+       	// FIXME: Not implemented
+     }
+
+     set onStep(callback) {
+       this._onStep = callback
+     }
+
+     onScroll(event) {
+       if (this._isFetching && event.target.scrollHeight !== this._scrollHeight) {
+         this._isFetching = false
+       }
+
+       if (!this._isFetching && event.target.scrollHeight - (parseInt(event.target.scrollHeight/100 * 40)) < event.target.scrollTop + event.target.getBoundingClientRect().height) {
+         this._scrollHeight = event.target.scrollHeight
+         this._isFetching = true
+         this._step++
+         this._onStep(this._step)
+       }
+     }
+
+     appendChild(child) {
+       this.shadowRoot.querySelector('ul').appendChild(child)
+     }
+  });
+})();
+</script>

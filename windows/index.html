@@ -1,0 +1,40 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Electron boilerplate</title>
+		<link rel="stylesheet" href="../assets/css/index.css">
+
+		<link rel="import" href="../components/appLayout.html">
+		<link rel="import" href="../components/mailList.html">
+		<link rel="import" href="../components/mailView.html">
+	</head>
+	<body>
+		<app-layout>
+      <mail-list slot="sidebar"></mail-list>
+			<mail-view></mail-view>
+		</app-layout>
+	</body>
+	<script>
+		const { ipcRenderer } = require('electron')
+		const mailList = document.querySelector('mail-list')
+		const mailView = document.querySelector('mail-view')
+
+    const mailListDefined = window.customElements.whenDefined(mailList.localName)
+    const mailViewDefined = window.customElements.whenDefined(mailView.localName)
+
+    Promise.all([mailListDefined, mailViewDefined]).then(() => {
+      mailList.onStep = step => {
+        ipcRenderer.send('mails', step)
+      }
+
+      mailList.onSelectedChanged = mail => {
+        mailView.mail = mail
+      }
+    })
+
+		ipcRenderer.on('mails', (e, mails) => {
+      mailList.addMails(mails)
+		})
+	</script>
+</html>

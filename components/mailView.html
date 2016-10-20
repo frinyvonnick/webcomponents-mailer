@@ -1,0 +1,88 @@
+<template id="mail-view-template">
+	<style>
+    #mail-view, #no-mail {
+      padding: 10px;
+      font-size: 14px;
+      font-family: -apple-system, 'Helvetica Neue', Helvetica, sans-serif;
+    }
+    #no-mail {
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #999;
+      font-weight: 700;
+      font-size: 24px;
+    }
+    .label{
+      color: #999
+    }
+    pre {
+      max-width: calc(100% - 20px);
+      white-space: pre-wrap; /* CSS3 - Text module (Candidate Recommendation) http://www.w3.org/TR/css3-text/#white-space */
+      word-wrap: break-word; /* IE 5.5+ */
+    }
+	</style>
+  <div id="no-mail">Aucun mail selectionné</div>
+	<div id="mail-view">
+    <span class="label">De:</span> <strong id="from"></strong><br>
+    <span class="label">A:</span> <span id="to"></span><br>
+    <span class="label">Objet:</span> <span id="subject"></span>
+    <hr>
+    <pre id="text"></pre>
+	</div>
+</template>
+
+<script>
+(function() {
+	require('@webcomponents/custom-elements/custom-elements.min.js')
+
+	const localDocument = document.currentScript.ownerDocument;
+
+	window.customElements.define("mail-view", class extends HTMLElement {
+	   constructor() {
+	      super(); // construct the original item to be extended, here it is the HTMLElement
+
+        this._mail = {}
+	   }
+
+	   connectedCallback(){
+				this.attachShadow({ mode: 'open' })
+				const layoutTemplate = localDocument.querySelector('#mail-view-template').content.cloneNode(true)
+				this.shadowRoot.appendChild(layoutTemplate)
+
+        this.shadowRoot.querySelector("#mail-view").style.display = "none"
+	   }
+
+     get mail() {
+       return this._mail
+     }
+
+     set mail(mail) {
+       this._mail = mail
+
+       this.shadowRoot.querySelector('#from').innerHTML = mail.from.reduce(
+         (previous, next) => `${previous} ${next.name !== '' ? next.name : next.address}`,
+         ''
+       )
+       this.shadowRoot.querySelector('#to').innerHTML = mail.to ? mail.to.reduce(
+         (previous, next) => `${previous} ${next.name !== '' ? next.name : next.address}`,
+         ''
+       ) : ''
+       this.shadowRoot.querySelector('#subject').innerHTML = mail.subject
+       this.shadowRoot.querySelector('#text').innerHTML = mail.html || mail.text
+
+       this.shadowRoot.querySelector("#no-mail").style.display = "none"
+       this.shadowRoot.querySelector("#mail-view").style.display = "block"
+     }
+
+	   disconnectedCallback(){
+	      // FIXME: Not implemented
+	   }
+
+	   attributeChangedCallback() {
+	     	// FIXME: Not implemented
+	   }
+	});
+})();
+</script>

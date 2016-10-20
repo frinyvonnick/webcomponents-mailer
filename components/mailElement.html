@@ -1,0 +1,133 @@
+<template id="mail-element-template">
+  <style>
+    @import "../assets/css/photon-0.1.2-dist/css/photon.min.css";
+    li {
+      list-style: none;
+    }
+    #text, #subject {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .unseen {
+      border-left: 3px solid #2196F3;
+    }
+  </style>
+
+  <li class="list-group-item">
+    <img id="image" class="img-circle media-object pull-left" src="" width="32" height="32">
+    <div class="media-body">
+      <strong id="subject">Suject</strong>
+      <i id="from">From</i>
+      <p id="text">Text</p>
+    </div>
+  </li>
+</template>
+
+<script>
+(function() {
+  require('@webcomponents/custom-elements/custom-elements.min.js')
+  const path = require('path')
+  const UNSEEN = 'unseen'
+  const FLAG_SEEN = '\\Seen'
+
+  const localDocument = document.currentScript.ownerDocument;
+
+  class MailElement extends HTMLElement {
+     constructor() {
+        super(); // construct the original item to be extended, here it is the HTMLElement
+
+        this._subject = ''
+        this._from = []
+        this._text = ''
+        this._flags = []
+        this._uid = 0
+     }
+
+     connectedCallback(){
+  			this.attachShadow({ mode: 'open' })
+  			const layoutTemplate = localDocument.querySelector('#mail-element-template').content.cloneNode(true)
+        this.shadowRoot.appendChild(layoutTemplate)
+     }
+
+     disconnectedCallback(){
+        // FIXME: Not implemented
+     }
+
+     attributeChangedCallback() {
+       	// FIXME: Not implemented
+     }
+
+     get subject() {
+       return this._subject
+     }
+
+     set subject(subject) {
+       this._subject = subject
+
+       this.shadowRoot.querySelector('#subject').innerHTML = this._subject
+     }
+
+     get from() {
+       return this._from
+     }
+
+     set from(f) {
+       this._from = f
+
+       this.shadowRoot.querySelector('#from').innerHTML = this._from.reduce((previous, next) => `${previous} ${next.name !== '' ? next.name : next.address}`, '')
+       this.setImageSrc(this._from[0].name !== '' ? this._from[0].name : this._from[0].address)
+     }
+
+     get text() {
+       return this._text
+     }
+
+     set text(text) {
+       this._text = text
+
+       this.shadowRoot.querySelector('#text').innerHTML = this._text
+     }
+
+     get flags() {
+       return this._flags
+     }
+
+     set flags(flags) {
+       this._flags = flags
+
+       const li = this.shadowRoot.querySelector('li')
+       if (!flags.includes(FLAG_SEEN) && !li.className.includes(UNSEEN)) {
+         li.className += ` ${UNSEEN}`
+       } else if (flags.includes(FLAG_SEEN) && li.className.includes(UNSEEN)) {
+         li.className = li.className.substring(li.className.indexOf(UNSEEN), UNSEEN.length)
+       }
+     }
+
+     get uid() {
+       return this._uid
+     }
+
+     set uid(uid) {
+       this._uid = uid
+
+       this.shadowRoot.querySelector('li').setAttribute('id', uid)
+     }
+
+     set onClick(callback) {
+       this.addEventListener('click', (e) => {
+         callback(e.target)
+       })
+     }
+
+     setImageSrc(str) {
+       const imgPath = path.join('file://', __dirname, `../assets/img/${str[0].toUpperCase()}.png`)
+       this.shadowRoot.querySelector('#image').setAttribute('src', imgPath)
+     }
+  }
+
+  window.customElements.define("mail-element", MailElement);
+})()
+</script>
